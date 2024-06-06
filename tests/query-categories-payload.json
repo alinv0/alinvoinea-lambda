@@ -1,0 +1,4 @@
+{
+  "action": "Query",
+  "query": "query GetCategories {categories {name slug}}"
+}

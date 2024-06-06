@@ -1,13 +1,10 @@
-use std::str::FromStr;
-
-use alinvoinea_graphql::{query, QueryRequest};
-use aws_config::BehaviorVersion;
+use alinvoinea_graphql::{handle_query_event};
 use aws_lambda_events::apigw::ApiGatewayV2httpResponse;
-use lambda_runtime::{Error, LambdaEvent, run, service_fn, tracing};
-use aws_lambda_events::encodings::Body;
 use dotenv::dotenv;
+use lambda_runtime::{Error, LambdaEvent, run, service_fn, tracing};
 use serde::Deserialize;
 use serde_json::Value;
+use std::str::FromStr;
 
 #[derive(Deserialize, Debug)]
 pub enum LambdaAction {
@@ -39,32 +36,7 @@ async fn entrypoint(event: LambdaEvent<Value>) -> Result<ApiGatewayV2httpRespons
 
     match action {
         LambdaAction::Query => {
-            let config = aws_config::load_defaults(BehaviorVersion::latest()).await;
-            let query_payload = match &event.payload["query"] {
-                Value::String(s) => s.clone(),
-                _ => panic!("No query provided!"),
-            };
-            let query_result = query(
-                QueryRequest { query: query_payload }, config).await;
-
-            match query_result {
-                Ok(response) => {
-                    println!("Query response {:?}", response);
-                    let response_body = serde_json::to_string(&response.data)?;
-                    Ok(ApiGatewayV2httpResponse {
-                        status_code: 200,
-                        headers: Default::default(),
-                        multi_value_headers: Default::default(),
-                        body: Option::from(Body::Text(response_body)),
-                        is_base64_encoded: false,
-                        cookies: vec![],
-                    })
-                }
-                Err(e) => {
-                    eprintln!("Error: {:?}", e);
-                    std::process::exit(1);
-                }
-            }
+            handle_query_event(event).await
         }
         _ => {
             eprintln!("Invalid action");

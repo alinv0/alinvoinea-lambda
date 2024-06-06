@@ -1,12 +1,14 @@
 use alinvoinea_secret::get_secret;
-use aws_config::SdkConfig;
+use aws_config::{SdkConfig, BehaviorVersion};
 use aws_sdk_secretsmanager::Client;
-use lambda_runtime::Error;
+use aws_lambda_events::apigw::ApiGatewayV2httpResponse;
+use aws_lambda_events::encodings::Body;
+use lambda_runtime::{Error, LambdaEvent};
 use reqwest::Client as ReqwestClient;
-use serde::Deserialize;
-use serde::Serialize;
-use serde_json::json;
+use serde::{Deserialize, Serialize};
+use serde_json::{json, Value};
 use std::env;
+
 
 #[derive(Serialize, Debug)]
 pub struct Response {
@@ -16,6 +18,34 @@ pub struct Response {
 #[derive(Deserialize)]
 pub struct QueryRequest {
     pub query: String,
+}
+
+pub async fn handle_query_event(event: LambdaEvent<Value>) -> Result<ApiGatewayV2httpResponse, Error> {
+    let config = aws_config::load_defaults(BehaviorVersion::latest()).await;
+    let query_payload = match &event.payload["query"] {
+        Value::String(s) => s.clone(),
+        _ => panic!("No query provided!"),
+    };
+    let query_result = query(
+        QueryRequest { query: query_payload }, config).await;
+    match query_result {
+        Ok(response) => {
+            println!("Query response {:?}", response);
+            let response_body = serde_json::to_string(&response.data)?;
+            Ok(ApiGatewayV2httpResponse {
+                status_code: 200,
+                headers: Default::default(),
+                multi_value_headers: Default::default(),
+                body: Option::from(Body::Text(response_body)),
+                is_base64_encoded: false,
+                cookies: vec![],
+            })
+        }
+        Err(e) => {
+            eprintln!("Error: {:?}", e);
+            std::process::exit(1);
+        }
+    }
 }
 
 pub async fn query(request: QueryRequest, config: SdkConfig) -> Result<Response, Error> {

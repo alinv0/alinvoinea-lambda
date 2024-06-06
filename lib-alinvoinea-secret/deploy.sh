@@ -1,5 +1,7 @@
 #!/usr/bin/env bash
 
+./package.sh
+
 # Capture the JSON output of the aws lambda publish-layer-version command
 json_output=$(aws lambda publish-layer-version \
 --layer-name alinvoinea_secret_lib \

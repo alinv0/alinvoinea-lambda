@@ -1,0 +1,15 @@
+{
+  "Version": "2012-10-17",
+  "Id": "default",
+  "Statement": [
+    {
+      "Sid": "SecretsManagerPolicy_GetPolicy",
+      "Effect": "Allow",
+      "Principal": {
+        "Service": "secretsmanager.amazonaws.com"
+      },
+      "Action": "lambda:GetPolicy",
+      "Resource": "arn:aws:lambda:eu-central-1:665063420499:function:alinvoinea-api"
+    }
+  ]
+}
