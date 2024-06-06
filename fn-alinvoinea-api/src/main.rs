@@ -25,14 +25,10 @@ impl FromStr for LambdaAction {
 }
 
 async fn entrypoint(event: LambdaEvent<Value>) -> Result<ApiGatewayV2httpResponse, Error> {
-    println!("Starting....");
-
     dotenv().ok();
     let action = LambdaAction::from_str(
         event.payload["action"].as_str().unwrap_or("")
     ).expect("No action provided!");
-
-    println!("Received action: {:?}", action);
 
     match action {
         LambdaAction::Query => {

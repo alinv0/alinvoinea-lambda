@@ -1,14 +1,13 @@
 use alinvoinea_secret::get_secret;
-use aws_config::{SdkConfig, BehaviorVersion};
-use aws_sdk_secretsmanager::Client;
+use aws_config::{BehaviorVersion, SdkConfig};
 use aws_lambda_events::apigw::ApiGatewayV2httpResponse;
 use aws_lambda_events::encodings::Body;
+use aws_sdk_secretsmanager::Client;
 use lambda_runtime::{Error, LambdaEvent};
 use reqwest::Client as ReqwestClient;
 use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};
 use std::env;
-
 
 #[derive(Serialize, Debug)]
 pub struct Response {

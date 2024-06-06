@@ -9,6 +9,7 @@ pub struct Response {
     pub secret_key: String,
     pub secret_value: String,
 }
+
 #[derive(Debug, Clone)]
 struct SecretNotFoundError;
 
