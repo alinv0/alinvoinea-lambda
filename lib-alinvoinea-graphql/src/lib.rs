@@ -1,9 +1,8 @@
 use alinvoinea_secret::get_secret;
-use aws_config::{BehaviorVersion, SdkConfig};
-use aws_lambda_events::apigw::ApiGatewayV2httpResponse;
-use aws_lambda_events::encodings::Body;
+use aws_config::SdkConfig;
 use aws_sdk_secretsmanager::Client;
-use lambda_runtime::{Error, LambdaEvent};
+use lambda_runtime::Error;
+use aws_sdk_secretsmanager::config::BehaviorVersion;
 use reqwest::Client as ReqwestClient;
 use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};
@@ -17,28 +16,36 @@ pub struct Response {
 #[derive(Deserialize)]
 pub struct QueryRequest {
     pub query: String,
+    pub variables: String,
 }
 
-pub async fn handle_query_event(event: LambdaEvent<Value>) -> Result<ApiGatewayV2httpResponse, Error> {
+pub async fn handle_query_event(body: Value) -> Result<String, Error> {
     let config = aws_config::load_defaults(BehaviorVersion::latest()).await;
-    let query_payload = match &event.payload["query"] {
-        Value::String(s) => s.clone(),
-        _ => panic!("No query provided!"),
+
+    let query_payload = body["query"].as_str().unwrap_or_default();
+    println!("Query: {}", query_payload);
+    let query_payload = if query_payload.is_empty() {
+        eprintln!("No query provided!");
+        std::process::exit(1);
+    } else {
+        query_payload
     };
+
+    let variables = body["variables"].as_object().cloned().unwrap_or_else(|| serde_json::Map::new());
+    let variables = serde_json::to_string_pretty(&variables)?;
+    println!("Variables: {}", variables);
+
     let query_result = query(
-        QueryRequest { query: query_payload }, config).await;
+        QueryRequest {
+            query: query_payload.to_string(),
+            variables,
+        }, config).await;
     match query_result {
         Ok(response) => {
-            println!("Query response {:?}", response);
-            let response_body = serde_json::to_string(&response.data)?;
-            Ok(ApiGatewayV2httpResponse {
-                status_code: 200,
-                headers: Default::default(),
-                multi_value_headers: Default::default(),
-                body: Option::from(Body::Text(response_body)),
-                is_base64_encoded: false,
-                cookies: vec![],
-            })
+            println!("Query response: {:?}", response);
+            let response_body = serde_json::to_string(&response.data.get("data"))?;
+            println!("Query response body: {:?}", response_body);
+            Ok(response_body)
         }
         Err(e) => {
             eprintln!("Error: {:?}", e);
@@ -47,19 +54,17 @@ pub async fn handle_query_event(event: LambdaEvent<Value>) -> Result<ApiGatewayV
     }
 }
 
-pub async fn query(request: QueryRequest, config: SdkConfig) -> Result<Response, Error> {
+async fn query(request: QueryRequest, config: SdkConfig) -> Result<Response, Error> {
     let graphql_endpoint_key = env::var("GRAPHQL_API_KEY")
         .expect("No endpoint found for query!");
-    // println!("GRAPHQL_API_KEY: {}", graphql_endpoint_key);
     let graphql_endpoint_result = get_secret(&Client::new(&config), graphql_endpoint_key.as_str()).await;
 
     match graphql_endpoint_result {
         Ok(endpoint_response) => {
             let endpoint = endpoint_response.secret_value;
-            // println!("GRAPHQL_API: {}", &endpoint);
             let client = ReqwestClient::new();
             let res = client.post(&endpoint)
-                .json(&json!({"query": request.query}))
+                .json(&json!({"query": request.query, "variables": request.variables}))
                 .send().await?
                 .json::<serde_json::Value>().await?;
 

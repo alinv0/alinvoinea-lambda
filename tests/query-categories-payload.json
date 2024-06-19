@@ -1,4 +1,20 @@
 {
-  "action": "Query",
-  "query": "query GetCategories {categories {name slug}}"
+  "request": {
+    "body": "{\"action\":\"Query\",\"query\":\"\\n        query GetSimilarPosts($categories: [String!], $slug: String!) {\\n          posts(\\n            orderBy: createdAt_DESC\\n            first: 5\\n            where: {\\n              categories_some: {\\n                name_in: $categories\\n              },\\n              slug_not: $slug\\n            }\\n          ) {\\n            title\\n            featuredImage {\\n              url\\n            }\\n            createdAt\\n            slug\\n          }\\n        }\\n    \",\"variables\":{\"categories\":[\"Web Development\"],\"slug\":\"genai-evolving\"}}"
+  },
+  "getSimilarPostsRequest": {
+    "body": "{\"action\":\"Query\",\"query\":\"\\n        query GetSimilarPosts($categories: [String!], $slug: String!) {\\n          posts(\\n            orderBy: createdAt_DESC\\n            first: 5\\n            where: {\\n              categories_some: {\\n                name_in: $categories\\n              },\\n              slug_not: $slug\\n            }\\n          ) {\\n            title\\n            featuredImage {\\n              url\\n            }\\n            createdAt\\n            slug\\n          }\\n        }\\n    \",\"variables\":{\"categories\":[\"Web Development\"],\"slug\":\"genai-evolving\"}}"
+  },
+  "response": {
+    "statusCode": 200,
+    "headers": {
+      "access-control-allow-headers": "x-requested-with,invite-code,content-type,X-Amz-Date,X-Amz-Security-Token,Authorization,X-Api-Key,X-Requested-With,Accept,Access-Control-Allow-Methods,Access-Control-Allow-Origin, Access-Control-Allow-Headers",
+      "access-control-allow-origin": "*",
+      "access-control-allow-methods": "POST,OPTIONS,GET",
+      "x-requested-with": "*",
+      "content-type": "application/json"
+    },
+    "multiValueHeaders": {},
+    "isBase64Encoded": false
+  }
 }

@@ -11,4 +11,6 @@ layer_graphql_arn=$(./deploy.sh)
 
 cd ../fn-alinvoinea-api || exit
 
-cargo lambda build --release --arm64  --output-format zip
+cargo build --release --target x86_64-unknown-linux-musl
+
+echo "$layer_secret_arn|$layer_graphql_arn"
