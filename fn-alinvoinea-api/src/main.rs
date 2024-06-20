@@ -1,7 +1,5 @@
 use std::str::FromStr;
 
-use alinvoinea_graphql::handle_query_event;
-use alinvoinea_secret::get_secret_value;
 use aws_lambda_events::apigw::{ApiGatewayProxyRequest, ApiGatewayProxyResponse};
 use aws_lambda_events::encodings::Body;
 use aws_lambda_events::http::HeaderMap;
@@ -10,25 +8,9 @@ use lambda_runtime::{Error, LambdaEvent, run, service_fn, tracing};
 use serde::Deserialize;
 use serde_json::Value;
 
-#[derive(Deserialize, Debug)]
-pub enum LambdaAction {
-    GetSecret,
-    Query,
-    Mutation,
-}
+use crate::route_action::route_action;
 
-impl FromStr for LambdaAction {
-    type Err = ();
-
-    fn from_str(s: &str) -> Result<Self, Self::Err> {
-        match s {
-            "Query" => Ok(LambdaAction::Query),
-            "Mutation" => Ok(LambdaAction::Mutation),
-            "GetSecret" => Ok(LambdaAction::GetSecret),
-            _ => Err(()),
-        }
-    }
-}
+mod route_action;
 
 async fn entrypoint(event: LambdaEvent<ApiGatewayProxyRequest>) -> Result<ApiGatewayProxyResponse, Error> {
     dotenv().ok();
@@ -36,29 +18,12 @@ async fn entrypoint(event: LambdaEvent<ApiGatewayProxyRequest>) -> Result<ApiGat
     //log event
     println!("Received event: {:?}", event);
     let request = event.payload;
-    println!("Received request: {}", serde_json::to_string_pretty(&request)?);
 
     let body: Value = serde_json::from_str(request.body.unwrap_or_default().as_str())?;
 
-    let action = LambdaAction::from_str(
-        body["action"].as_str().unwrap_or("")
-    ).expect("No action provided!");
-    println!("Action: {:?}", action);
+    let result = route_action(body).await?;
 
     let headers = default_headers();
-
-    let result = match action {
-        LambdaAction::Query => {
-            handle_query_event(body).await?
-        }
-        LambdaAction::GetSecret => {
-            get_secret_value(body).await?
-        }
-        _ => {
-            eprintln!("Invalid action");
-            std::process::exit(1);
-        }
-    };
 
     Ok(ApiGatewayProxyResponse {
         status_code: 200,

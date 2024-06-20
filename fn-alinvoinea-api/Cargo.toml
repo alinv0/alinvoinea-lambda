@@ -12,3 +12,4 @@ serde = { version = "1.0.203", features = ["derive"] }
 serde_json = "1.0.117"
 alinvoinea_graphql = { path = "../lib-alinvoinea-graphql" }
 alinvoinea_secret = { path = "../lib-alinvoinea-secret" }
+alinvoinea_common = { path = "../lib-alinvoinea-common" }
