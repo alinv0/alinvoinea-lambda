@@ -1,11 +1,8 @@
-use std::str::FromStr;
-
 use aws_lambda_events::apigw::{ApiGatewayProxyRequest, ApiGatewayProxyResponse};
 use aws_lambda_events::encodings::Body;
 use aws_lambda_events::http::HeaderMap;
 use dotenv::dotenv;
 use lambda_runtime::{Error, LambdaEvent, run, service_fn, tracing};
-use serde::Deserialize;
 use serde_json::Value;
 
 use crate::route_action::route_action;
