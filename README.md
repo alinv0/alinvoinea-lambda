@@ -4,12 +4,19 @@ This repository contains the source code for the serverless backend of my websit
 
 ## Write lambda functions - tips
 use musl
+
 give +x to binary 
+
 copy binary to zip with -j 
+
 create role for function
+
 add permission to role
+
 add permission to function for SSM
+
 works only for architectures x86_64
+
 
 ## How to build
 cargo 
