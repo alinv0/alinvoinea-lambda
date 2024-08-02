@@ -21,7 +21,7 @@ works only for architectures x86_64
 ## How to build
 #!/usr/bin/env bash
 
-# Define variables
+#### Define variables
 AWS_ACCOUNT_ID="665063420499"
 ROLE_NAME="alinvoinea-api-execution-role"
 SECRETS_POLICY_NAME="SecretsManagerAccessPolicy"
