@@ -1,5 +1,7 @@
 # alinvoinea-lambda
 
+This repository contains the source code for the serverless backend of my website (alinvoinea.eu).
+
 ## Write lambda functions - tips
 use musl
 give +x to binary 
